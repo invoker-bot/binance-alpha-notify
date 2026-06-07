@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
 from alpha_notify.core import check_for_updates
+from alpha_notify.errors import AlphaNotifyError
+from alpha_notify.models import select_today_airdrops
 from alpha_notify.store import NotificationStore
 
 BJ = timezone(timedelta(hours=8))
@@ -75,3 +77,61 @@ def test_no_airdrops_skips(tmp_path):
     check_for_updates(client=client, store=None, notifier=notifier,
                       cache_path=tmp_path / "c.json", now=NOW)
     assert notifier.sent == []
+
+
+class _FailingNotifier:
+    def send(self, title, body):
+        raise AlphaNotifyError("send boom")
+
+
+class _PriceFailClient:
+    def __init__(self, airdrops):
+        self._a = airdrops
+
+    def fetch_airdrops(self):
+        return self._a
+
+    def fetch_prices(self):
+        raise AlphaNotifyError("price boom")
+
+
+def test_send_failure_not_marked_sent(tmp_path):
+    # If sending fails, the airdrop must NOT be recorded as sent (no false dedup).
+    client = FakeClient([_record("1")], {"FOO": {"price": "2"}})
+    store = NotificationStore(tmp_path / "n.db")
+    check_for_updates(client=client, store=store, notifier=_FailingNotifier(),
+                      cache_path=tmp_path / "c.json", now=NOW)
+    _, today_airdrops, _ = select_today_airdrops(
+        client.fetch_airdrops(), client.fetch_prices(), NOW
+    )
+    assert [a.identity for a in store.filter_unsent(today_airdrops)] == ["1"]
+
+
+def test_force_does_not_write_db(tmp_path):
+    # force sends but must not poison the dedup DB → a later normal run still sends.
+    client = FakeClient([_record("1")], {"FOO": {"price": "2"}})
+    store = NotificationStore(tmp_path / "n.db")
+    cache_path = tmp_path / "c.json"
+    check_for_updates(client=client, store=store, notifier=FakeNotifier(),
+                      cache_path=cache_path, now=NOW, force=True)
+    notifier2 = FakeNotifier()
+    check_for_updates(client=client, store=store, notifier=notifier2,
+                      cache_path=cache_path, now=NOW)
+    assert len(notifier2.sent) == 1
+
+
+def test_no_store_still_sends(tmp_path):
+    client = FakeClient([_record("1")], {"FOO": {"price": "2"}})
+    notifier = FakeNotifier()
+    check_for_updates(client=client, store=None, notifier=notifier,
+                      cache_path=tmp_path / "c.json", now=NOW)
+    assert len(notifier.sent) == 1
+
+
+def test_price_failure_degrades_and_sends(tmp_path):
+    # A price-fetch failure degrades to no prices but still sends the airdrop.
+    client = _PriceFailClient([_record("1")])
+    notifier = FakeNotifier()
+    check_for_updates(client=client, store=None, notifier=notifier,
+                      cache_path=tmp_path / "c.json", now=NOW)
+    assert len(notifier.sent) == 1
