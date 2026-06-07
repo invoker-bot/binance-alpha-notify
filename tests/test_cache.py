@@ -78,3 +78,10 @@ def test_load_non_list_raises(tmp_path):
     path.write_text('{"x": 1}', encoding="utf-8")
     with pytest.raises(AlphaNotifyError):
         load_cached_data(path)
+
+
+def test_detect_changes_ignores_key_order():
+    today = [{"id": "1", "token": "A", "date": "2026-06-08", "time": "15:00", "amount": "100"}]
+    cached = [{"amount": "100", "time": "15:00", "date": "2026-06-08", "token": "A", "id": "1"}]
+    changed, _ = detect_changes(cached, today, "2026-06-08")
+    assert changed is False

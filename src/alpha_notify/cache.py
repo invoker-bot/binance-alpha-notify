@@ -60,8 +60,8 @@ def detect_changes(
         and item.get("time")
         and is_precise_time(str(item.get("time")))
     ]
-    current_payload = json.dumps(_normalized_for_compare(today), ensure_ascii=False)
-    cached_payload = json.dumps(_normalized_for_compare(old_today), ensure_ascii=False)
+    current_payload = json.dumps(_normalized_for_compare(today), sort_keys=True, ensure_ascii=False)
+    cached_payload = json.dumps(_normalized_for_compare(old_today), sort_keys=True, ensure_ascii=False)
     if current_payload != cached_payload:
         return True, "🔄 检测到当天空投变化，将发送通知。"
     return False, "✅ 当天空投无变化，无需通知。"
