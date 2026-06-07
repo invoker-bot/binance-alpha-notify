@@ -70,8 +70,7 @@ def check_for_updates(
         try:
             store.cleanup(today_str)
         except AlphaNotifyError as exc:
-            log.append(f"⚠️ {exc}")
-            store = None
+            log.append(f"⚠️ 清理历史记录失败，将继续去重: {exc}")
 
     if store is not None and not force:
         try:

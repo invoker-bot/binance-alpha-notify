@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 from typing import List, Sequence
@@ -14,6 +15,10 @@ class NotificationStore:
 
     def __init__(self, path: Path):
         self.path = path
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass  # 目录创建失败时交由后续数据库连接报错
         self._ensure_schema()
 
     def _connect(self) -> sqlite3.Connection:
@@ -21,7 +26,7 @@ class NotificationStore:
 
     def _ensure_schema(self) -> None:
         try:
-            with self._connect() as conn:
+            with closing(self._connect()) as conn, conn:
                 conn.execute(
                     """
                     CREATE TABLE IF NOT EXISTS notifications (
@@ -36,15 +41,13 @@ class NotificationStore:
                 conn.execute(
                     "CREATE INDEX IF NOT EXISTS idx_notifications_date ON notifications(date)"
                 )
-                conn.commit()
         except sqlite3.Error as exc:
             raise AlphaNotifyError(f"初始化通知数据库失败: {exc}") from exc
 
     def cleanup(self, current_date: str) -> None:
         try:
-            with self._connect() as conn:
+            with closing(self._connect()) as conn, conn:
                 conn.execute("DELETE FROM notifications WHERE date <> ?", (current_date,))
-                conn.commit()
         except sqlite3.Error as exc:
             raise AlphaNotifyError(f"清理通知数据库失败: {exc}") from exc
 
@@ -54,7 +57,7 @@ class NotificationStore:
         identities = [item.identity for item in airdrops]
         placeholders = ",".join("?" for _ in identities)
         try:
-            with self._connect() as conn:
+            with closing(self._connect()) as conn:
                 rows = conn.execute(
                     f"SELECT identity FROM notifications WHERE identity IN ({placeholders})",
                     identities,
@@ -72,7 +75,7 @@ class NotificationStore:
             for item in airdrops
         ]
         try:
-            with self._connect() as conn:
+            with closing(self._connect()) as conn, conn:
                 conn.executemany(
                     """
                     INSERT OR REPLACE INTO notifications (identity, date, token, time, sent_at)
@@ -80,6 +83,5 @@ class NotificationStore:
                     """,
                     payload,
                 )
-                conn.commit()
         except sqlite3.Error as exc:
             raise AlphaNotifyError(f"写入通知数据库失败: {exc}") from exc

@@ -16,7 +16,7 @@ def is_precise_time(value: str) -> bool:
 
 def _parse_datetime(date_str: str, time_str: str, tz: tzinfo) -> Optional[datetime]:
     """以多种格式解析日期时间，并附加时区"""
-    combined = f"{date_str} {time_str}"
+    combined = f"{date_str.strip()} {time_str.strip()}"
     for fmt in DATETIME_FORMATS:
         try:
             return datetime.strptime(combined, fmt).replace(tzinfo=tz)

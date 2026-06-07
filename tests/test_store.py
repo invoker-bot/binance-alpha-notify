@@ -32,3 +32,19 @@ def test_cleanup_removes_other_dates(tmp_path):
     store.cleanup("2026-06-08")
     again = store.filter_unsent([_drop("old", date="2026-06-01")])
     assert [d.identity for d in again] == ["old"]
+
+
+def test_store_creates_missing_parent_dir(tmp_path):
+    store = NotificationStore(tmp_path / "sub" / "deep" / "n.db")
+    store.mark_sent([_drop("a")], NOW)
+    assert [d.identity for d in store.filter_unsent([_drop("a")])] == []
+
+
+def test_store_releases_db_file(tmp_path):
+    import os
+    db = tmp_path / "n.db"
+    store = NotificationStore(db)
+    store.mark_sent([_drop("a")], NOW)
+    store.filter_unsent([_drop("a")])
+    os.remove(db)  # must not raise: no lingering open connection (Windows file lock)
+    assert not db.exists()

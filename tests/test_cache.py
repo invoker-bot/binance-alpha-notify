@@ -85,3 +85,9 @@ def test_detect_changes_ignores_key_order():
     cached = [{"amount": "100", "time": "15:00", "date": "2026-06-08", "token": "A", "id": "1"}]
     changed, _ = detect_changes(cached, today, "2026-06-08")
     assert changed is False
+
+
+def test_save_creates_missing_parent_dir(tmp_path):
+    path = tmp_path / "sub" / "deep" / "c.json"
+    save_cached_data(path, [{"id": "1"}])
+    assert load_cached_data(path) == [{"id": "1"}]

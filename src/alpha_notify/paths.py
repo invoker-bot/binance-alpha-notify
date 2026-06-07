@@ -28,12 +28,12 @@ def get_config_file() -> Path:
 def get_db_file() -> Path:
     override = os.getenv("ALPHA_NOTIFY_DB_PATH")
     if override:
-        return Path(override)
+        return Path(override).expanduser()
     return get_data_dir() / "notifications.db"
 
 
 def get_cache_file() -> Path:
     override = os.getenv("ALPHA_NOTIFY_CACHE_PATH")
     if override:
-        return Path(override)
+        return Path(override).expanduser()
     return get_data_dir() / "airdrop_data.json"

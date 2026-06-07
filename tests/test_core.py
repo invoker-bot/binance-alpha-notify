@@ -135,3 +135,24 @@ def test_price_failure_degrades_and_sends(tmp_path):
     check_for_updates(client=client, store=None, notifier=notifier,
                       cache_path=tmp_path / "c.json", now=NOW)
     assert len(notifier.sent) == 1
+
+
+class _CleanupFailStore(NotificationStore):
+    def cleanup(self, current_date):
+        raise AlphaNotifyError("cleanup boom")
+
+
+def test_cleanup_failure_keeps_dedup(tmp_path):
+    client = FakeClient([_record("1")], {"FOO": {"price": "2"}})
+    store = _CleanupFailStore(tmp_path / "n.db")
+    cache_path = tmp_path / "c.json"
+
+    n1 = FakeNotifier()
+    check_for_updates(client=client, store=store, notifier=n1,
+                      cache_path=cache_path, now=NOW)
+    assert len(n1.sent) == 1  # sent despite cleanup failing
+
+    n2 = FakeNotifier()
+    check_for_updates(client=client, store=store, notifier=n2,
+                      cache_path=cache_path, now=NOW)
+    assert n2.sent == []  # dedup still active -> not re-sent

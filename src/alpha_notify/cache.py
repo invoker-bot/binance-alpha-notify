@@ -27,6 +27,7 @@ def load_cached_data(path: Path) -> Optional[List[Dict[str, Any]]]:
 def save_cached_data(path: Path, data: List[Dict[str, Any]]) -> None:
     """将数据写入缓存文件"""
     try:
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     except OSError as exc:
         raise AlphaNotifyError(f"保存缓存数据失败: {exc}") from exc

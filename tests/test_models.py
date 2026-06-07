@@ -85,3 +85,10 @@ def test_format_message():
     assert "共 1 条" in msg
     assert "空投名称：FOO" in msg
     assert "$250.00" in msg
+
+
+def test_select_today_tolerates_whitespace_in_time():
+    records = [{"id": "1", "token": "A", "date": "2026-06-08", "time": "15:00 "}]
+    _, parsed, skipped = select_today_airdrops(records, {}, NOW)
+    assert [p.identity for p in parsed] == ["1"]
+    assert skipped == 0

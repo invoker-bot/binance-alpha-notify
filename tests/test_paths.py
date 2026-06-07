@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import alpha_notify.paths as paths
 
 
@@ -24,3 +26,13 @@ def test_db_default(monkeypatch, tmp_path):
     monkeypatch.setattr(paths.platformdirs, "user_data_dir",
                         lambda app, appauthor=None: str(tmp_path / "data" / app))
     assert paths.get_db_file() == tmp_path / "data" / "alpha-notify" / "notifications.db"
+
+
+def test_db_override_expands_tilde(monkeypatch):
+    monkeypatch.setenv("ALPHA_NOTIFY_DB_PATH", "~/x.db")
+    assert paths.get_db_file() == Path("~/x.db").expanduser()
+
+
+def test_cache_override_expands_tilde(monkeypatch):
+    monkeypatch.setenv("ALPHA_NOTIFY_CACHE_PATH", "~/c.json")
+    assert paths.get_cache_file() == Path("~/c.json").expanduser()
