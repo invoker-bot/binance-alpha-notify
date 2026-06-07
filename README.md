@@ -66,7 +66,7 @@ Windows（任务计划程序）：创建基本任务，触发器设为按间隔�
 
 - 配置：`<user_config_dir>/alpha-notify/config.ini`
 - 去重 DB / 缓存：`<user_data_dir>/alpha-notify/`（运行 `config path` 会创建这些目录）
-- 可用 `ALPHA_NOTIFY_DB_PATH` / `ALPHA_NOTIFY_CACHE_PATH` 覆盖（覆盖路径的父目录需自行确保存在）
+- 可用 `ALPHA_NOTIFY_DB_PATH` / `ALPHA_NOTIFY_CACHE_PATH` 覆盖（支持 `~` 展开，父目录会自动创建）
 
 ## 开发
 
