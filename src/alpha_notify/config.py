@@ -13,7 +13,8 @@ CONFIG_SECTION = "alpha-notify"
 
 CONFIG_TEMPLATE = """\
 [alpha-notify]
-# Apprise 通知配置，多个用逗号分隔。
+# Apprise 通知配置：每行一个 URL，或单行用逗号分隔。
+# 注意：若某个 URL 本身包含逗号（如 mailto 的多个收件人 ?to=a,b），请让它单独成行。
 # 完整服务列表与格式：https://github.com/caronc/apprise
 #
 # 示例：
@@ -40,21 +41,29 @@ class Config:
 
 
 def _split_urls(raw: str) -> List[str]:
-    return [u.strip() for u in raw.split(",") if u.strip()]
+    # 多个 URL 可每行一个（含逗号的 URL 应单独成行）；
+    # 单行时回退到逗号分隔，兼容旧配置与环境变量写法。
+    if "\n" in raw or "\r" in raw:
+        parts = raw.splitlines()
+    else:
+        parts = raw.split(",")
+    return [p.strip() for p in parts if p.strip()]
 
 
 def load_config(config_path: Optional[Path] = None) -> Config:
     """加载配置：APPRISE_URLS 环境变量 > 配置文件"""
     path = config_path if config_path is not None else get_config_file()
+    if config_path is not None and not path.is_file():
+        raise AlphaNotifyError(f"配置文件不存在: {path}")
 
     apprise_urls: List[str] = []
     timeout = 30
     timezone_offset = 8
 
-    if path.exists():
+    if path.is_file():
         parser = configparser.ConfigParser(interpolation=None)
         try:
-            parser.read(path, encoding="utf-8")
+            parser.read(path, encoding="utf-8-sig")
         except (configparser.Error, OSError) as exc:
             raise AlphaNotifyError(f"读取配置文件失败: {exc}") from exc
         if parser.has_section(CONFIG_SECTION):

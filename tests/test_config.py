@@ -25,12 +25,48 @@ def test_env_overrides_file(tmp_path, monkeypatch):
     assert cfg.apprise_urls == ["env://one", "env://two"]
 
 
-def test_missing_file_defaults(tmp_path, monkeypatch):
+def test_missing_default_file_uses_defaults(tmp_path, monkeypatch):
     monkeypatch.delenv("APPRISE_URLS", raising=False)
-    cfg = load_config(tmp_path / "nope.ini")
+    monkeypatch.setattr("alpha_notify.config.get_config_file", lambda: tmp_path / "nope.ini")
+    cfg = load_config()  # implicit default path missing -> defaults, no error
     assert cfg.apprise_urls == []
     assert cfg.timeout == 30
     assert cfg.timezone_offset == 8
+
+
+def test_explicit_missing_config_raises(tmp_path, monkeypatch):
+    monkeypatch.delenv("APPRISE_URLS", raising=False)
+    with pytest.raises(AlphaNotifyError):
+        load_config(tmp_path / "nope.ini")
+
+
+def test_load_config_with_utf8_bom(tmp_path, monkeypatch):
+    monkeypatch.delenv("APPRISE_URLS", raising=False)
+    cfg = tmp_path / "config.ini"
+    cfg.write_text("[alpha-notify]\napprise_urls = a://x\n", encoding="utf-8-sig")
+    assert load_config(cfg).apprise_urls == ["a://x"]
+
+
+def test_apprise_urls_newline_separated_preserves_comma(tmp_path, monkeypatch):
+    monkeypatch.delenv("APPRISE_URLS", raising=False)
+    cfg = tmp_path / "config.ini"
+    cfg.write_text(
+        "[alpha-notify]\napprise_urls =\n"
+        "  mailto://u:p@h?to=a@x.com,b@y.com\n"
+        "  tgram://TOKEN/CHATID\n",
+        encoding="utf-8",
+    )
+    assert load_config(cfg).apprise_urls == [
+        "mailto://u:p@h?to=a@x.com,b@y.com",
+        "tgram://TOKEN/CHATID",
+    ]
+
+
+def test_apprise_urls_single_line_comma_still_works(tmp_path, monkeypatch):
+    monkeypatch.delenv("APPRISE_URLS", raising=False)
+    cfg = tmp_path / "config.ini"
+    cfg.write_text("[alpha-notify]\napprise_urls = a://x, b://y\n", encoding="utf-8")
+    assert load_config(cfg).apprise_urls == ["a://x", "b://y"]
 
 
 def test_url_with_percent_is_preserved(tmp_path, monkeypatch):
