@@ -9,13 +9,14 @@ APP_NAME = "alpha-notify"
 
 
 def get_config_dir() -> Path:
-    path = Path(platformdirs.user_config_dir(APP_NAME))
+    # appauthor=False 避免 Windows 上出现 alpha-notify\alpha-notify 的重复目录层级
+    path = Path(platformdirs.user_config_dir(APP_NAME, appauthor=False))
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def get_data_dir() -> Path:
-    path = Path(platformdirs.user_data_dir(APP_NAME))
+    path = Path(platformdirs.user_data_dir(APP_NAME, appauthor=False))
     path.mkdir(parents=True, exist_ok=True)
     return path
 

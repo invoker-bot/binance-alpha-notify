@@ -13,7 +13,7 @@ def test_cache_override(monkeypatch, tmp_path):
 
 def test_config_dir_created(monkeypatch, tmp_path):
     monkeypatch.setattr(paths.platformdirs, "user_config_dir",
-                        lambda app: str(tmp_path / "cfg" / app))
+                        lambda app, appauthor=None: str(tmp_path / "cfg" / app))
     d = paths.get_config_dir()
     assert d.exists()
     assert d == tmp_path / "cfg" / "alpha-notify"
@@ -22,5 +22,5 @@ def test_config_dir_created(monkeypatch, tmp_path):
 def test_db_default(monkeypatch, tmp_path):
     monkeypatch.delenv("ALPHA_NOTIFY_DB_PATH", raising=False)
     monkeypatch.setattr(paths.platformdirs, "user_data_dir",
-                        lambda app: str(tmp_path / "data" / app))
+                        lambda app, appauthor=None: str(tmp_path / "data" / app))
     assert paths.get_db_file() == tmp_path / "data" / "alpha-notify" / "notifications.db"
