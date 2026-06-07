@@ -1,6 +1,6 @@
 import pytest
 
-from alpha_notify.client import AlphaClient
+from alpha_notify.client import HEADERS, AlphaClient
 from alpha_notify.errors import AlphaNotifyError
 
 
@@ -54,4 +54,7 @@ def test_fetch_prices_empty_on_unexpected():
 def test_timeout_passed_through():
     session = FakeSession([])
     AlphaClient(timeout=7, session=session).fetch_airdrops()
-    assert session.calls[0][2] == 7
+    url, headers, timeout = session.calls[0]
+    assert url == "https://alpha123.uk/api/data?fresh=1"  # parity tripwire
+    assert headers == HEADERS
+    assert timeout == 7
