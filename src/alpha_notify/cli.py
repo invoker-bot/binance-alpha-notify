@@ -153,7 +153,5 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     _configure_stdout()
     parser = build_parser()
     args = parser.parse_args(argv)
-    # 顶层与各子命令均设置了 func，所以这里一定存在；无子命令时回退到 cmd_run。
-    result = args.func(args)
-    # 命令处理函数返回 int 退出码；将非 int（如布尔）规整为成功(0)。
-    return result if isinstance(result, int) and not isinstance(result, bool) else 0
+    # 顶层 set_defaults(func=cmd_run) 保证无子命令时回退到 run。
+    return args.func(args)

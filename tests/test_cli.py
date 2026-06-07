@@ -45,6 +45,11 @@ def test_run_dry_run_invokes_core(monkeypatch, tmp_path):
 
 def test_default_command_is_run(monkeypatch):
     called = {}
-    monkeypatch.setattr(cli, "cmd_run", lambda ns: called.setdefault("ran", True) or 0)
+
+    def fake_run(ns):
+        called["ran"] = True
+        return 0
+
+    monkeypatch.setattr(cli, "cmd_run", fake_run)
     assert cli.main([]) == 0
     assert called.get("ran")
