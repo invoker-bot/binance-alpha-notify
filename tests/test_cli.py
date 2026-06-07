@@ -53,3 +53,17 @@ def test_default_command_is_run(monkeypatch):
     monkeypatch.setattr(cli, "cmd_run", fake_run)
     assert cli.main([]) == 0
     assert called.get("ran")
+
+
+def test_run_unexpected_error_returns_1(monkeypatch, tmp_path):
+    _patch_paths(monkeypatch, tmp_path)
+    monkeypatch.setattr(cli, "load_config", lambda p: Config(apprise_urls=["x://y"]))
+    monkeypatch.setattr(cli, "AlphaClient", lambda **kw: object())
+    monkeypatch.setattr(cli, "NotificationStore", lambda p: object())
+    monkeypatch.setattr(cli, "Notifier", lambda urls: object())
+
+    def boom(**kwargs):
+        raise ValueError("boom")
+
+    monkeypatch.setattr(cli, "check_for_updates", boom)
+    assert cli.main(["run"]) == 1  # not an unhandled traceback

@@ -1,4 +1,7 @@
+import pytest
+
 from alpha_notify.config import load_config, mask_urls, write_template_config
+from alpha_notify.errors import AlphaNotifyError
 
 
 def test_load_from_file(tmp_path, monkeypatch):
@@ -50,3 +53,11 @@ def test_mask_urls():
     assert masked[0].startswith("tgram://")
     assert "***" in masked[0]
     assert "123456789" not in masked[0]
+
+
+def test_out_of_range_timezone_raises(tmp_path, monkeypatch):
+    monkeypatch.delenv("APPRISE_URLS", raising=False)
+    cfg_file = tmp_path / "config.ini"
+    cfg_file.write_text("[alpha-notify]\ntimezone = 999\n", encoding="utf-8")
+    with pytest.raises(AlphaNotifyError):
+        load_config(cfg_file)

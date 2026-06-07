@@ -123,6 +123,8 @@ def select_today_airdrops(
     today_str = now.strftime("%Y-%m-%d")
 
     for record in records:
+        if not isinstance(record, dict):
+            continue
         date_value = record.get("date")
         if not date_value or str(date_value) != today_str:
             continue

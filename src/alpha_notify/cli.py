@@ -154,4 +154,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     # 顶层 set_defaults(func=cmd_run) 保证无子命令时回退到 run。
-    return args.func(args)
+    try:
+        return args.func(args)
+    except AlphaNotifyError as exc:
+        print(f"❌ 程序执行失败: {exc}")
+        if getattr(args, "debug", False):
+            import traceback
+            traceback.print_exc()
+        return 1
+    except Exception as exc:  # 兜底：未预期异常也转为非零退出，不向用户抛 traceback
+        print(f"❌ 程序异常: {exc}")
+        if getattr(args, "debug", False):
+            import traceback
+            traceback.print_exc()
+        return 1

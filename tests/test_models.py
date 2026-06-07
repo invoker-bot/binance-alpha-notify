@@ -63,6 +63,17 @@ def test_select_today_dedups_identity():
     assert len(parsed) == 1
 
 
+def test_select_today_skips_non_dict_records():
+    records = [
+        "garbage",
+        {"id": "1", "token": "A", "date": "2026-06-08", "time": "15:00"},
+        123,
+    ]
+    raw, parsed, _ = select_today_airdrops(records, {}, NOW)
+    assert [p.identity for p in parsed] == ["1"]
+    assert len(raw) == 1
+
+
 def test_format_message():
     drop = Airdrop.from_record(
         {"id": "x", "token": "FOO", "date": "2026-06-08", "time": "15:00",

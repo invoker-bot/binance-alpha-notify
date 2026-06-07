@@ -70,6 +70,11 @@ def load_config(config_path: Optional[Path] = None) -> Config:
     if env_urls is not None and env_urls.strip():
         apprise_urls = _split_urls(env_urls)
 
+    if not -23 <= timezone_offset <= 23:
+        raise AlphaNotifyError(
+            f"配置项 timezone 超出范围（应在 -23 到 23 之间）: {timezone_offset}"
+        )
+
     return Config(apprise_urls=apprise_urls, timeout=timeout, timezone_offset=timezone_offset)
 
 
