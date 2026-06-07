@@ -65,6 +65,9 @@ class Airdrop:
         date_str = str(date_raw)
         time_str = str(time_raw)
 
+        if now.tzinfo is None:
+            return None
+
         scheduled = _parse_datetime(date_str, time_str, now.tzinfo)
         if scheduled is None or scheduled.date() != now.date() or scheduled <= now:
             return None
