@@ -10,6 +10,21 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Qingrui Hu" }]
+keywords = ["binance", "alpha", "airdrop", "apprise", "notification", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Utilities",
+]
 dependencies = [
     "requests>=2.31.0",
     "apprise>=1.7.0",
@@ -18,6 +33,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
+
+[project.urls]
+Homepage = "https://github.com/invoker-bot/binance-alpha-notify"
+Repository = "https://github.com/invoker-bot/binance-alpha-notify"
+Issues = "https://github.com/invoker-bot/binance-alpha-notify/issues"
 
 [project.scripts]
 alpha-notify = "alpha_notify.cli:main"
