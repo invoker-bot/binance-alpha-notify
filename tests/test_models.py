@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from alpha_notify.models import (
     Airdrop,
     format_airdrop_message,
+    format_airdrop_title,
     is_precise_time,
     select_today_airdrops,
 )
@@ -81,10 +82,39 @@ def test_format_message():
         {"FOO": {"price": "2.5"}},
         NOW,
     )
-    msg = format_airdrop_message([drop])
-    assert "共 1 条" in msg
-    assert "空投名称：FOO" in msg
-    assert "$250.00" in msg
+    assert format_airdrop_message([drop]) == "FOO 15:00 · 积分200 · 数量100 · $250.00"
+
+
+def test_format_message_omits_unknown_fields():
+    drop = Airdrop.from_record(
+        {"id": "x", "token": "BAR", "date": "2026-06-08", "time": "16:00", "points": "150"},
+        {},
+        NOW,
+    )
+    # no amount / no price -> only token, time, points
+    assert format_airdrop_message([drop]) == "BAR 16:00 · 积分150"
+
+
+def test_format_title_single():
+    drop = Airdrop.from_record(
+        {"id": "x", "token": "FOO", "date": "2026-06-08", "time": "15:00",
+         "amount": "100", "points": "200"},
+        {"FOO": {"price": "2.5"}},
+        NOW,
+    )
+    assert format_airdrop_title([drop]) == "🔔 FOO 15:00 ~$250"
+
+
+def test_format_title_multiple():
+    drops = [
+        Airdrop.from_record(
+            {"id": "1", "token": "FOO", "date": "2026-06-08", "time": "15:00"}, {}, NOW
+        ),
+        Airdrop.from_record(
+            {"id": "2", "token": "BAR", "date": "2026-06-08", "time": "16:00"}, {}, NOW
+        ),
+    ]
+    assert format_airdrop_title(drops) == "🔔 2个空投：FOO 15:00、BAR 16:00"
 
 
 def test_select_today_tolerates_whitespace_in_time():

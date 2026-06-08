@@ -155,20 +155,29 @@ def select_today_airdrops(
     return list(today_raw_map.values()), list(parsed_map.values()), skipped_without_time
 
 
+def format_airdrop_title(airdrops: Sequence[Airdrop]) -> str:
+    """生成简短标题（用于推送预览）：token + 时间（+ 已知金额）。"""
+    if not airdrops:
+        return "🔔 空投通知"
+    if len(airdrops) == 1:
+        item = airdrops[0]
+        value = f" ~${item.total_value:.0f}" if item.total_value is not None else ""
+        return f"🔔 {item.token} {item.time}{value}"
+    shown = "、".join(f"{a.token} {a.time}" for a in airdrops[:3])
+    more = "…" if len(airdrops) > 3 else ""
+    return f"🔔 {len(airdrops)}个空投：{shown}{more}"
+
+
 def format_airdrop_message(airdrops: Sequence[Airdrop]) -> str:
-    """将空投列表格式化为多行文本"""
-    detail_blocks = []
+    """将空投列表格式化为精简文本：每条一行，省略冗余日期与未知字段。"""
+    lines = []
     for item in airdrops:
-        detail_blocks.append(
-            "\n".join(
-                (
-                    f"空投名称：{item.token}",
-                    f"空投时间：{item.date} {item.time}",
-                    f"空投数量：{item.amount}",
-                    f"所需积分：{item.points}",
-                    f"空投金额：${item.formatted_value}",
-                )
-            )
-        )
-    header = f"🔔 检测到今天的新空投，共 {len(airdrops)} 条"
-    return f"{header}\n\n" + "\n\n".join(detail_blocks)
+        seg = [f"{item.token} {item.time}"]
+        if item.points and item.points != "未知":
+            seg.append(f"积分{item.points}")
+        if _as_float(item.amount) is not None:
+            seg.append(f"数量{item.amount}")
+        if item.total_value is not None:
+            seg.append(f"${item.formatted_value}")
+        lines.append(" · ".join(seg))
+    return "\n".join(lines)

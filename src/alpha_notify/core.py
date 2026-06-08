@@ -7,7 +7,7 @@ from typing import List, Optional
 from . import cache as cache_mod
 from .client import AlphaClient
 from .errors import AlphaNotifyError
-from .models import format_airdrop_message, select_today_airdrops
+from .models import format_airdrop_message, format_airdrop_title, select_today_airdrops
 from .notifier import Notifier
 from .store import NotificationStore
 
@@ -93,9 +93,11 @@ def check_for_updates(
             log.append(f"⚠️ {exc}")
 
     message = format_airdrop_message(pending_airdrops)
+    title = format_airdrop_title(pending_airdrops)
 
     if debug or dry_run:
         log.append("\n--- 通知内容预览 ---")
+        log.append(f"标题: {title}")
         log.append(message)
         log.append("--- 预览结束 ---")
 
@@ -108,7 +110,7 @@ def check_for_updates(
         return "\n".join(log)
 
     try:
-        count = notifier.send("🔔 空投通知", message)
+        count = notifier.send(title, message)
         log.append(f"✅ 通知已发送到 {count} 个服务")
         if store is not None and not force:
             try:
