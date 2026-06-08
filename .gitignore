@@ -10,3 +10,6 @@ venv/
 *.db
 *.sqlite3
 .DS_Store
+
+# 内部设计/实现文档，不公开（保留在本地）
+docs/superpowers/
